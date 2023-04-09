@@ -4,7 +4,7 @@ import numpy as np
 
 def calculate_tardiness(job_schedule_matrix, due_dates, processing_times):
     num_machines = len(job_schedule_matrix)
-    num_time_indexes = len(job_schedule_matrix[0])
+    max_T = len(job_schedule_matrix[0])
     
     completion_times = [0] * num_machines
     tardiness = [0] * num_machines
@@ -12,7 +12,7 @@ def calculate_tardiness(job_schedule_matrix, due_dates, processing_times):
     for machine_idx in range(num_machines):
         current_time = 0
 
-        for time_idx in range(num_time_indexes):
+        for time_idx in range(max_T):
             job_idx = job_schedule_matrix[machine_idx][time_idx]
 
             if job_idx != -1:  # If a job is scheduled at this time index

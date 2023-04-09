@@ -1,6 +1,4 @@
 input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
-filepath = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
-
 
 def make_operation_data(num_jobs, num_machines, processing_times, machines):
     # this function maps the operations index to (job idx, processing time, machine)
@@ -11,6 +9,10 @@ def make_operation_data(num_jobs, num_machines, processing_times, machines):
             operation_data[operation_idx] = (i, processing_times[i][j], machines[i][j])
 
     return operation_data
+
+def make_due_data(processing_times):
+    due_dates = [sum(row) for row in processing_times]
+    return due_dates
 
 def read_input_data(input_file_path):
     with open(input_file_path, 'r') as file:
@@ -39,7 +41,8 @@ def read_input_data(input_file_path):
             machines.append(list(map(int, data_lines[1 + num_jobs + i].split())))
         
         operations_data = make_operation_data(num_jobs, num_machines, processing_times, machines)
-        instances.append((num_jobs, num_machines, processing_times, machines, operations_data))
+        due_date = make_due_data(processing_times)
+        instances.append((num_jobs, num_machines, processing_times, machines, operations_data, due_date))
 
     return instances
 
@@ -47,7 +50,7 @@ def read_input_data(input_file_path):
 
 if __name__ == '__main__':
     instances = read_input_data(input_file_path)
-    for idx, (num_jobs, num_machines, processing_times, machines, operations_data) in enumerate(instances):
+    for idx, (num_jobs, num_machines, processing_times, machines, operations_data, due_date) in enumerate(instances):
         print(f"Instance {idx + 1}:")
         print(f"Number of jobs: {num_jobs}")
         print(f"Number of machines: {num_machines}")

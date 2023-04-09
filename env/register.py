@@ -11,10 +11,11 @@
 from gymnasium.envs.registration import register
 
 register(
-    id='OSSP-v0',
-    entry_point='env:OSSP',
+    id='GSSP-v0',
+    entry_point='env.gssp_env:GSSP',
     kwargs={
         'num_jobs': 5,
         'num_machines': 3,
+        'operations_data': None,
     }
 )
