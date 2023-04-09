@@ -1,0 +1,11 @@
+{
+    "epochs": 10,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "input_size": 784,
+    "hidden_size": 128,
+    "output_size": 10
+
+    
+
+}
