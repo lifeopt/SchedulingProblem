@@ -97,7 +97,7 @@ class GSSP(gym.Env):
     def flatten(self, allocation_matrix_flat):
         return allocation_matrix_flat.reshape(self.M, self.T)    
     
-    def is_job_scheduled_at_same_time(self, machine_idx, job_idx, start_time, processing_time):
+    def _is_job_scheduled_at_same_time(self, machine_idx, job_idx, start_time, processing_time):
         for m in range(self.M):
             if m != machine_idx:
                 for t in range(start_time, start_time + processing_time):
@@ -121,6 +121,21 @@ class GSSP(gym.Env):
             if is_valid_slot:
                 return t
         return -1  # No valid time slot found
+
+    def get_n_features(self):
+        job_schedule_matrix_dim = np.prod(self.observation_space[0].shape)
+        operation_allocation_status_dim = np.prod(self.observation_space[1].shape)
+        operation_job_idxs_dim = np.prod(self.observation_space[2].shape)
+        operation_processing_times_dim = np.prod(self.observation_space[3].shape)
+
+        n_features = (
+            job_schedule_matrix_dim
+            + operation_allocation_status_dim
+            + operation_job_idxs_dim
+            + operation_processing_times_dim
+        )
+
+        return n_features
 
 # code to test the env works properly
 
