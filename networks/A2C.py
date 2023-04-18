@@ -8,8 +8,11 @@ import torch
 import torch.nn as nn
 from torch import optim
 from tqdm import tqdm
-
 import gymnasium as gym
+from collections import OrderedDict
+
+
+
 
 
 # %%
@@ -24,12 +27,6 @@ import gymnasium as gym
 #
 # The focus of this tutorial will not be on the details of A2C itself. Instead, the tutorial will focus on how to use vectorized environments
 # and domain randomization to accelerate the training process for A2C (and other reinforcement learning algorithms).
-#
-
-
-# %%
-#
-# ------------------------------
 #
 
 class A2C(nn.Module):
@@ -61,20 +58,20 @@ class A2C(nn.Module):
         self.n_envs = n_envs
 
         critic_layers = [
-            nn.Linear(n_features, 32),
+            nn.Linear(n_features, 64),
             nn.ReLU(),
-            nn.Linear(32, 32),
+            nn.Linear(64, 64),
             nn.ReLU(),
-            nn.Linear(32, 1),  # estimate V(s)
+            nn.Linear(64, 1),  # estimate V(s)
         ]
 
         actor_layers = [
-            nn.Linear(n_features, 32),
+            nn.Linear(n_features, 64),
             nn.ReLU(),
-            nn.Linear(32, 32),
+            nn.Linear(64, 64),
             nn.ReLU(),
             nn.Linear(
-                32, n_actions
+                64, n_actions
             ),  # estimate action logits (will be fed into a softmax later)
         ]
 
@@ -85,7 +82,12 @@ class A2C(nn.Module):
         # define optimizers for actor and critic
         self.critic_optim = optim.RMSprop(self.critic.parameters(), lr=critic_lr)
         self.actor_optim = optim.RMSprop(self.actor.parameters(), lr=actor_lr)
+        
+        print("num features = ", n_features, ", num_actions = ", n_actions
+              , "device = ", self.device)
+        
 
+    # def forward(self, x: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
     def forward(self, x: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass of the networks.
@@ -97,6 +99,7 @@ class A2C(nn.Module):
             state_values: A tensor with the state values, with shape [n_envs,].
             action_logits_vec: A tensor with the action logits, with shape [n_envs, n_actions].
         """
+        # x = preprocess_observation(x)
         x = torch.Tensor(x).to(self.device)
         state_values = self.critic(x)  # shape: [n_envs,]
         action_logits_vec = self.actor(x)  # shape: [n_envs, n_actions]
