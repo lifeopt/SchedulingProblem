@@ -2,6 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Assume `observation` is an OrderedDict with state arrays.
+def preprocess_observation(observation):
+    # Now `preprocessed_observation` is a NumPy array of shape `(n_envs, max_length)`
+    # that can be used as input to the `forward` method of your network.
+    states_list = list(observation.values())
+    batch_states = np.concatenate(states_list, axis=1)
+    return batch_states
+
 def calculate_tardiness(job_schedule_matrix, due_dates, processing_times):
     num_machines = len(job_schedule_matrix)
     max_T = len(job_schedule_matrix[0])
