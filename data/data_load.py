@@ -39,11 +39,12 @@ def pre_processing(num_jobs, num_machines, processing_times, machines):
 
 def make_operation_data(num_jobs, num_machines, processing_times, machines):
     # this function maps the operations index to (job idx, processing time, machine)
-    operation_data = {}
+    operation_data = []
     for i in range(num_jobs):
         for j in range(num_machines):
             operation_idx = i * num_machines + j
-            operation_data[operation_idx] = (i, processing_times[i][j], machines[i][j])
+            operation_data.append((i, processing_times[i][j], machines[i][j]))
+            # operation_data[operation_idx] = (i, processing_times[i][j], machines[i][j])
 
     return operation_data
 

@@ -20,5 +20,7 @@ if __name__ == '__main__':
     hidden_size = int(config['hidden_size'])
     output_size = int(config['output_size'])
     
+    num_envs = int(config['num_envs'])
+    
     
     max_processing_time = int(config['max_processing_time'])

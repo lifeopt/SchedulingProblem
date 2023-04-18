@@ -10,12 +10,12 @@ from configuration.config import config
 from tqdm import tqdm
 import utility
 
-# input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
+input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
 
 import numpy as np
 
 # environment hyperparams
-n_envs = 3
+n_envs = config['num_envs']
 n_updates = 1000
 n_steps_per_update = 128
 randomize_domain = False
@@ -26,35 +26,6 @@ lam = 0.95  # hyperparameter for GAE
 ent_coef = 0.01  # coefficient for the entropy bonus (to encourage exploration)
 actor_lr = 0.001
 critic_lr = 0.005
-
-def custom_worker(remote, parent_remote, env_fn_wrapper):
-    parent_remote.close()
-    env = env_fn_wrapper()
-    while True:
-        cmd, data = remote.recv()
-        if cmd == 'step':
-            ob, reward, done, info = env.step(data)
-            if done:
-                ob = env.reset()
-            remote.send((ob, reward, done, info))
-        elif cmd == 'reset':
-            ob = env.reset()
-            remote.send(ob)
-        elif cmd == 'reset_task':
-            ob = env.reset_task(data)
-            remote.send(ob)
-        elif cmd == 'close':
-            remote.close()
-            break
-        elif cmd == 'get_spaces':
-            remote.send((env.observation_space, env.action_space))
-        elif cmd == 'custom':  # Handle custom messages
-            result = env._handle_custom(data)
-            remote.send(result)
-        else:
-            raise NotImplementedError
-        
-
    
 def main():  
     
@@ -66,7 +37,7 @@ def main():
          due_date, num_features, converted_processing_times, max_T, num_actions) = instance
         
         # Replace the default worker function with your custom worker function
-        gym.vector.async_vector_env._worker = custom_worker
+        # gym.vector.async_vector_env._worker = custom_worker
         
         
         envs = gym.vector.AsyncVectorEnv(
@@ -110,10 +81,12 @@ def main():
             # at the start of training reset all envs to get an initial state
             if sample_phase == 0:
                 states, info = envs_wrapper.reset(seed=42)
-                states = utility.preprocess_observation(states)
 
             # play n steps in our parallel environments to collect data
             for step in range(n_steps_per_update):
+                
+                states = utility.flatten_observations(states)
+                
                 # select an action A_{t} using S_{t} as input for the agent
                 actions, action_log_probs, state_value_preds, entropy = agent.select_action(
                     states
