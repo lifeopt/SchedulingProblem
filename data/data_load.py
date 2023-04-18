@@ -1,5 +1,42 @@
 input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
 
+from math import ceil
+
+
+time_unit = 1   # 1분 단위
+max_hours_per_schedule = 24
+
+def convert_processing_times(processing_times, time_unit):
+    converted_times = []
+    # for time in processing_times:
+    #     converted_times.append(int(time / time_unit))
+        
+    for row in processing_times:
+        converted_times.append([ceil(element / time_unit) for element in row])
+        
+    return converted_times
+
+def pre_processing(num_jobs, num_machines, processing_times, machines):
+    converted_processing_times = convert_processing_times(processing_times, time_unit)
+    
+    operations_data = make_operation_data(num_jobs, num_machines, converted_processing_times, machines)
+    due_date = make_due_data(converted_processing_times)
+    
+    max_T = ceil(max_hours_per_schedule * 60 / time_unit) # max time index for job schedule matrix
+    job_schedule_matrix_dim = num_machines * max_T
+    operation_allocation_status_dim = len(operations_data)
+    operation_job_idxs_dim =  len(operations_data)
+    operation_processing_times_dim =  len(operations_data)
+    num_features = (
+        job_schedule_matrix_dim
+        + operation_allocation_status_dim
+        + operation_job_idxs_dim
+        + operation_processing_times_dim
+    )
+    
+    num_actions = num_machines * num_jobs
+    return operations_data, due_date, num_features, converted_processing_times, max_T, num_actions
+
 def make_operation_data(num_jobs, num_machines, processing_times, machines):
     # this function maps the operations index to (job idx, processing time, machine)
     operation_data = {}
@@ -40,17 +77,24 @@ def read_input_data(input_file_path):
             processing_times.append(list(map(int, data_lines[1 + i].split())))
             machines.append(list(map(int, data_lines[1 + num_jobs + i].split())))
         
-        operations_data = make_operation_data(num_jobs, num_machines, processing_times, machines)
-        due_date = make_due_data(processing_times)
-        instances.append((num_jobs, num_machines, processing_times, machines, operations_data, due_date))
-
+        operations_data, due_date, num_features, converted_processing_times, max_T, num_actions \
+        = pre_processing(num_jobs, num_machines, processing_times, machines)
+        instances.append((num_jobs,
+                          num_machines,
+                          processing_times,
+                          machines,
+                          operations_data,
+                          due_date,
+                          num_features,
+                          converted_processing_times,
+                          max_T,
+                          num_actions))
     return instances
-
-
 
 if __name__ == '__main__':
     instances = read_input_data(input_file_path)
-    for idx, (num_jobs, num_machines, processing_times, machines, operations_data, due_date) in enumerate(instances):
+    for idx, (num_jobs, num_machines, processing_times, machines,
+              operations_data, due_date, num_features, converted_processing_times, max, num_actions_T) in enumerate(instances):
         print(f"Instance {idx + 1}:")
         print(f"Number of jobs: {num_jobs}")
         print(f"Number of machines: {num_machines}")
@@ -60,4 +104,4 @@ if __name__ == '__main__':
         print("Machine order:")
         for row in machines:
             print(row)
-        print("\n")
+        print("\n")    
