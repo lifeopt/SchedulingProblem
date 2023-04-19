@@ -4,9 +4,8 @@ from gymnasium import spaces
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import configuration.config as config
 import data.data_load as data_load
-import utility
+import utils.utility as utility
 
 class GSSP(gym.Env):
 
@@ -35,7 +34,7 @@ class GSSP(gym.Env):
         # We have (operation idx, machine idx) pair which is N * M combinations
         # a (operation idx, machine idx) pair means that the job corresponding to 
         # operation idx is assigned to the machine corresponding to machine idx.
-        self.action_space = spaces.MultiBinary(self.K * self.M)
+        self.action_space = spaces.Discrete(self.K * self.M)
         
     def _get_obs(self):
         return {
