@@ -1,7 +1,9 @@
 input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
 
 from math import ceil
+from configuration.config import config
 
+# input_file_path = config['train']['input_file_path']
 
 time_unit = 1   # 1분 단위
 max_hours_per_schedule = 24
