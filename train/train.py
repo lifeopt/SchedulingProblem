@@ -10,7 +10,7 @@ lam = config['agent']['lam']
 ent_coef = config['agent']['entropy_coef']
 
 # set the device
-def train(agent, envs_wrapper, device):
+def train(agent, envs_wrapper, device, writer, instance_id):
     critic_losses = []
     actor_losses = []
     entropies = []
@@ -68,8 +68,23 @@ def train(agent, envs_wrapper, device):
         agent.update_parameters(critic_loss, actor_loss)
         
         # log the losses and entropy
-        critic_losses.append(critic_loss.detach().cpu().numpy())
-        actor_losses.append(actor_loss.detach().cpu().numpy())
-        entropies.append(entropy.detach().mean().cpu().numpy())
+        # critic_losses.append(critic_loss.detach().cpu().numpy())
+        # actor_losses.append(actor_loss.detach().cpu().numpy())
+        # entropies.append(entropy.detach().mean().cpu().numpy())
+        critic_loss_value = critic_loss.detach().cpu().numpy()
+        actor_loss_value = actor_loss.detach().cpu().numpy()
+        entropy_value = entropy.detach().mean().cpu().numpy()
+
+        critic_losses.append(critic_loss_value)
+        actor_losses.append(actor_loss_value)
+        entropies.append(entropy_value)
+
+        writer.add_scalar(f'Instance_{instance_id}/Critic_loss', critic_loss_value, sample_phase)
+        writer.add_scalar(f'Instance_{instance_id}/Actor_loss', actor_loss_value, sample_phase)
+        writer.add_scalar(f'Instance_{instance_id}/Entropy', entropy_value, sample_phase)
+    
+    writer.close()
+        
+        
         
     return (critic_losses, actor_losses, entropies)

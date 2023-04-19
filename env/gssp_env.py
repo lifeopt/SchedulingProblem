@@ -1,10 +1,6 @@
 import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import data.data_load as data_load
 import utils.utility as utility
 
 class GSSP(gym.Env):
@@ -135,36 +131,3 @@ class GSSP(gym.Env):
         )
 
         return n_features
-
-# code to test the env works properly
-
-
-input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
-if __name__ == '__main__':
-    
-    instances = data_load.read_input_data(input_file_path)
-    for idx, (num_jobs, num_machines, processing_times, machines, operations_data, due_date) in enumerate(instances):
-        
-        env = GSSP(num_jobs, num_machines, operations_data, due_date)
-        
-        # Test the reset method
-        initial_observation = env.reset()
-        # assert initial_observation['allocation_matrix'].shape == (num_machines * max_t,)
-        # assert initial_observation['waiting_list'].shape == (num_operations,)
-        
-        # Test the step method with a sample action
-        action = (1, 3)  # Allocate job 3 to machine 1
-        observation, reward, terminated, _, info = env.step(action)
-        
-        # Check if the output matches the expected result
-        # You need to define the expected result based on your problem requirements
-        expected_observation = ...
-        expected_reward = ...
-        expected_done = ...
-        expected_info = ...
-
-        # assert np.array_equal(observation['allocation_matrix'], expected_observation['allocation_matrix'])
-        # assert np.array_equal(observation['waiting_list'], expected_observation['waiting_list'])
-        # assert reward == expected_reward
-        # assert done == expected_done
-        # assert info == expected_info

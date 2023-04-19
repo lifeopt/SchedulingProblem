@@ -1,6 +1,5 @@
 import yaml
 import os
-import sys
 
 # 현재 스크립트 파일의 경로를 얻습니다.
 script_directory = os.path.dirname(os.path.abspath(__file__))

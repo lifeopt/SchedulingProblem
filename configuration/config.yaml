@@ -6,7 +6,8 @@ envs:
     randomize_domain: False
 
 train:
-    input_file_path: "C:/Users/jsp2288.park/Desktop/RLStudy/SchedulingProblem/data/taillard/open_shop_scheduling/tai4_4.txt"
+    # input_file_path: "C:/Users/jsp2288.park/Desktop/RLStudy/SchedulingProblem/data/taillard/open_shop_scheduling/tai4_4.txt"
+    input_file_path: 'C:/Users/JS/Desktop/코드/01_ORScheduler/SchedulingProblem/data/taillard/open_shop_scheduling/tai4_4.txt'
     num_instance_limit: 1
 
 agent:
