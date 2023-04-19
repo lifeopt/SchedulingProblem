@@ -1,7 +1,4 @@
 from __future__ import annotations
-
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -10,10 +7,9 @@ from torch import optim
 from tqdm import tqdm
 import gymnasium as gym
 from collections import OrderedDict
-
-
-
-
+import torch.autograd as autograd
+autograd.set_detect_anomaly(True)
+import utils.utility as utility
 
 # %%
 # Advantage Actor-Critic (A2C)
@@ -87,7 +83,6 @@ class A2C(nn.Module):
               , "device = ", self.device)
         
 
-    # def forward(self, x: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
     def forward(self, x: np.ndarray) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Forward pass of the networks.
@@ -99,14 +94,13 @@ class A2C(nn.Module):
             state_values: A tensor with the state values, with shape [n_envs,].
             action_logits_vec: A tensor with the action logits, with shape [n_envs, n_actions].
         """
-        # x = preprocess_observation(x)
         x = torch.Tensor(x).to(self.device)
         state_values = self.critic(x)  # shape: [n_envs,]
         action_logits_vec = self.actor(x)  # shape: [n_envs, n_actions]
         return (state_values, action_logits_vec)
 
     def select_action(
-        self, x: np.ndarray
+        self, states: OrderedDict
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Returns a tuple of the chosen actions and the log-probs of those actions.
@@ -119,6 +113,7 @@ class A2C(nn.Module):
             action_log_probs: A tensor with the log-probs of the actions, with shape [n_steps_per_update, n_envs].
             state_values: A tensor with the state values, with shape [n_steps_per_update, n_envs].
         """
+        x = utility.flatten_observations(states) # OrderedDict to np.ndarray
         state_values, action_logits = self.forward(x)
         action_pd = torch.distributions.Categorical(
             logits=action_logits
