@@ -74,6 +74,7 @@ class GSSP(gym.Env):
             self._operation_allocation_status[operation_idx] = True
         else:
             pass # nothing change
+  
         
         # An episode is done iff the all operations are allocated
         terminated = np.all(self._operation_allocation_status)
@@ -116,18 +117,3 @@ class GSSP(gym.Env):
             if is_valid_slot:
                 return t
         return -1  # No valid time slot found
-
-    def get_n_features(self):
-        job_schedule_matrix_dim = np.prod(self.observation_space[0].shape)
-        operation_allocation_status_dim = np.prod(self.observation_space[1].shape)
-        operation_job_idxs_dim = np.prod(self.observation_space[2].shape)
-        operation_processing_times_dim = np.prod(self.observation_space[3].shape)
-
-        n_features = (
-            job_schedule_matrix_dim
-            + operation_allocation_status_dim
-            + operation_job_idxs_dim
-            + operation_processing_times_dim
-        )
-
-        return n_features

@@ -17,7 +17,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 script_dir = Path(__file__).resolve().parent
 sys.path.append(str(script_dir.parent / "configuration"))
 
-input_file_path = config['train']['input_file_path']
+input_file_path = config['paths']['input_file_path']
 n_envs = config['envs']['num_envs']
 n_updates = config['envs']['num_updates']
 use_cuda = config['envs']['use_cuda']
@@ -49,6 +49,7 @@ def main():
         else:
             envs = gym.vector.make('GSSP-v0', num_jobs = num_jobs, num_machines =  num_machines,
                 operations_data = operations_data, due_date = due_date, max_T = max_T, num_envs = n_envs, max_episode_steps=600)
+            
         
         # set the device
         if use_cuda:

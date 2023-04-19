@@ -4,8 +4,8 @@ import torch
 from configuration.config import config
 
 
-actor_weights_path = config['model_utils']['actor_weights_path']
-critic_weights_path =  config['model_utils']['critic_weights_path']
+actor_weights_path = config['paths']['actor_weights_path']
+critic_weights_path =  config['paths']['critic_weights_path']
 
 def save_weights(agent):
     if not os.path.exists("weights"):

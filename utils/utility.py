@@ -37,28 +37,3 @@ def calculate_tardiness(job_schedule_matrix, due_dates, processing_times):
 
     return tardiness
 
-# def plot_gantt_chart(job_schedule_matrix, num_jobs):
-#     fig, ax = plt.subplots()
-
-#     # Define a colormap for different job indices
-#     colors = plt.cm.get_cmap('tab20', num_jobs)
-
-#     for m, machine_schedule in enumerate(job_schedule_matrix):
-#         for t, job_idx in enumerate(machine_schedule):
-#             if job_idx != -1:
-#                 # Plot a rectangle for each job with the corresponding color
-#                 rect = plt.Rectangle((t, m), 1, 1, facecolor=colors(job_idx), edgecolor='black')
-#                 ax.add_patch(rect)
-
-#     # Set axis labels and title
-#     ax.set_xlabel('Time')
-#     ax.set_ylabel('Machine Index')
-#     ax.set_title('Gantt Chart')
-#     plt.xticks(np.arange(0, len(machine_schedule), 1))
-#     plt.yticks(np.arange(0, len(job_schedule_matrix), 1))
-
-#     # Display the plot
-#     plt.show()
-    
-# if __name__ == '__main__':
-#     plot_gantt_chart

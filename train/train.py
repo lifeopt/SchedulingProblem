@@ -1,6 +1,8 @@
 from tqdm import tqdm
 import torch
 from configuration.config import config
+import gymnasium as gym
+from utils.visualize_job_schedule import display_gantt_chart
 
 n_envs = config['envs']['num_envs']
 n_updates = config['envs']['num_updates']
@@ -42,6 +44,11 @@ def train(agent, envs_wrapper, device, writer, instance_id):
             states, rewards, terminated, truncated, infos = envs_wrapper.step(
                 actions.cpu().numpy()
             )
+            
+            # Display job_schedule_matrix at specific intervals
+            display_interval = 3
+            if step % display_interval == 0:
+                display_gantt_chart(states['job_schedule_matrix'], step, display_interval)
 
             ep_value_preds[step] = torch.squeeze(state_value_preds)
             ep_rewards[step] = torch.tensor(rewards, device=device)
@@ -50,7 +57,7 @@ def train(agent, envs_wrapper, device, writer, instance_id):
             # add a mask (for the return calculation later);
             # for each env the mask is 1 if the episode is ongoing and 0 if it is terminated (not by truncation!)
             masks[step] = torch.tensor([not term for term in terminated])
-
+        
         # calculate the losses for actor and critic
         critic_loss, actor_loss = agent.get_losses(
             ep_rewards,
