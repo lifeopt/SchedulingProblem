@@ -2,7 +2,8 @@ from tqdm import tqdm
 import torch
 from configuration.config import config
 import gymnasium as gym
-from utils.visualize_job_schedule import display_gantt_chart
+# from utils.visualize_job_schedule import display_gantt_chart
+from utils import visualize_job_schedule
 
 n_envs = config['envs']['num_envs']
 n_updates = config['envs']['num_updates']
@@ -46,9 +47,12 @@ def train(agent, envs_wrapper, device, writer, instance_id):
             )
             
             # Display job_schedule_matrix at specific intervals
-            display_interval = 3
-            if step % display_interval == 0:
-                display_gantt_chart(states['job_schedule_matrix'], step, display_interval)
+            for env_idx in range(len(terminated)):
+                if terminated[env_idx]:
+                    visualize_job_schedule.draw_gantt_chart1(states['job_schedule_matrix'], env_idx)
+                # display_gantt_chart?(states['job_schedule_matrix'], step, display_interval)
+
+
 
             ep_value_preds[step] = torch.squeeze(state_value_preds)
             ep_rewards[step] = torch.tensor(rewards, device=device)
