@@ -1,9 +1,9 @@
-input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
+# input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
 
 from math import ceil
 from configuration.config import config
 
-# input_file_path = config['train']['input_file_path']
+input_file_path = config['paths']['input_file_path']
 
 time_unit = 1   # 1분 단위
 max_hours_per_schedule = 24
@@ -24,7 +24,8 @@ def pre_processing(num_jobs, num_machines, processing_times, machines):
     operations_data = make_operation_data(num_jobs, num_machines, converted_processing_times, machines)
     due_date = make_due_data(converted_processing_times)
     
-    max_T = ceil(max_hours_per_schedule * 60 / time_unit) # max time index for job schedule matrix
+    # max_T = ceil(max_hours_per_schedule * 60 / time_unit) # max time index for job schedule matrix
+    max_T = sum([sum(row) for row in converted_processing_times])
     job_schedule_matrix_dim = num_machines * max_T
     operation_allocation_status_dim = len(operations_data)
     operation_job_idxs_dim =  len(operations_data)
