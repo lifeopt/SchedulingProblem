@@ -12,7 +12,7 @@ gamma = config['agent']['gamma']
 lam = config['agent']['lam']
 ent_coef = config['agent']['entropy_coef']
 
-# set the device
+    # set the device
 def train(agent, envs_wrapper, device, writer, instance_id):
     critic_losses = []
     actor_losses = []
@@ -46,14 +46,20 @@ def train(agent, envs_wrapper, device, writer, instance_id):
                 actions.cpu().numpy()
             )
             
-            # Display job_schedule_matrix at specific intervals
-            for env_idx in range(len(terminated)):
-                if terminated[env_idx]:
-                    visualize_job_schedule.draw_gantt_chart1(states['job_schedule_matrix'], env_idx)
-                # display_gantt_chart?(states['job_schedule_matrix'], step, display_interval)
-
-
-
+            # for env_idx in range(len(terminated)):
+            # #     if terminated[env_idx]:
+            # for env_idx in range(n_envs):
+            #     visualize_job_schedule.draw_gantt_chart_v2(env_idx, states['job_schedule_matrix'][env_idx],
+            #                                                 states['operation_processing_times'][env_idx],
+            #                                                 states['operation_allocation_status'][env_idx],
+            #                                                 states['operation_job_idxs'][env_idx])
+            
+            
+            # # Display job_schedule_matrix at specific intervals
+            # for env_idx in range(len(terminated)):
+            #     if terminated[env_idx]:
+            #         visualize_job_schedule.draw_gantt_chart1(states['job_schedule_matrix'], env_idx)
+            #     # display_gantt_chart?(states['job_schedule_matrix'], step, display_interval)
             ep_value_preds[step] = torch.squeeze(state_value_preds)
             ep_rewards[step] = torch.tensor(rewards, device=device)
             ep_action_log_probs[step] = action_log_probs
