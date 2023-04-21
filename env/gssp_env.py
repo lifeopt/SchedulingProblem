@@ -2,6 +2,10 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 import utils.utility as utility
+from utils import visualize_job_schedule
+from configuration.config import config
+
+n_envs = config['envs']['num_envs']
 
 class GSSP(gym.Env):
 
@@ -63,23 +67,37 @@ class GSSP(gym.Env):
         # which machine to assign the operation to. 
         
         (operation_idx, machine_idx) = self._get_action_to_assignment(action)
+        
         job_idx = self._operation_job_idxs[operation_idx]
         processing_time = self._operation_processing_times[operation_idx]
         
         # action
         # The assignment is made at the earliest possible time index that is available for allocation
-        target_t = self.find_smallest_available_t(machine_idx, job_idx, processing_time)
-        if target_t != -1:
-            self._job_schedule_matrix[machine_idx, target_t:target_t + processing_time] = job_idx
-            self._operation_allocation_status[operation_idx] = True
-        else:
-            pass # nothing change
-  
         
+        if not self._operation_allocation_status[operation_idx]:
+            target_t = self.find_smallest_available_t(machine_idx, job_idx, processing_time)
+            if target_t != -1:
+                self._job_schedule_matrix[machine_idx, target_t:target_t + processing_time] = job_idx
+                self._operation_allocation_status[operation_idx] = True
+            else:
+                for env_idx in range(n_envs):
+                    visualize_job_schedule.draw_gantt_chart_v2(env_idx, self._job_schedule_matrix,
+                                                                self._operation_processing_times,
+                                                                self._operation_allocation_status,
+                                                                self._operation_job_idxs)
+                pass # nothing change
+            
+        # 그 액션으로 인해 증가한 tardiness만 따로 계산해야함
+        tardiness = utility.calculate_tardiness(self._job_schedule_matrix, self._due_date, self._operation_processing_times)
+            
         # An episode is done iff the all operations are allocated
         terminated = np.all(self._operation_allocation_status)
-
-        tardiness = utility.calculate_tardiness(self._job_schedule_matrix, self._due_date, self._operation_processing_times)
+        if terminated:
+            reward = (tardiness) * 2
+        else:
+            reward = (-tardiness)
+            
+        
         reward = (-tardiness) if terminated else 0  # Binary sparse rewards
         observation = self._get_obs()
         # observation = self._get_flatten_obs()
@@ -88,8 +106,8 @@ class GSSP(gym.Env):
         return observation, reward, terminated, False, info
     
     def _get_action_to_assignment(self, action):
-        k = action % self.K
-        m = action // self.K
+        k = action % self.M
+        m = action // self.M
         
         return (k, m)
     
