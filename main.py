@@ -33,7 +33,7 @@ def main():
     instances = data_load.read_input_data(input_file_path)
     writer = SummaryWriter(log_dir='runs/GSSP_training')
     for i, instance in enumerate(instances):
-        if num_instance_limit >= i:
+        if num_instance_limit <= i:
             continue
         (num_jobs, num_machines, processing_times, machines, operations_data,
          due_date, num_features, converted_processing_times, max_T, num_actions) = instance
