@@ -10,9 +10,7 @@ max_hours_per_schedule = 24
 
 def convert_processing_times(processing_times, time_unit):
     converted_times = []
-    # for time in processing_times:
-    #     converted_times.append(int(time / time_unit))
-        
+
     for row in processing_times:
         converted_times.append([ceil(element / time_unit) for element in row])
         
