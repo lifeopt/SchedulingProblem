@@ -2,6 +2,7 @@
 
 from math import ceil
 from configuration.config import config
+import numpy as np
 
 input_file_path = config['paths']['input_file_path']
 
@@ -16,11 +17,12 @@ def convert_processing_times(processing_times, time_unit):
         
     return converted_times
 
-def pre_processing(num_jobs, num_machines, processing_times, machines):
+def pre_processing(num_jobs, num_machines, num_operations, processing_times, machines):
     converted_processing_times = convert_processing_times(processing_times, time_unit)
     
     operations_data = make_operation_data(num_jobs, num_machines, converted_processing_times, machines)
     due_date = make_due_data(converted_processing_times)
+    num_operations = len([elem for row in processing_times for elem in row])
     
     # max_T = ceil(max_hours_per_schedule * 60 / time_unit) # max time index for job schedule matrix
     max_T = sum([sum(row) for row in converted_processing_times])
@@ -35,7 +37,7 @@ def pre_processing(num_jobs, num_machines, processing_times, machines):
         + operation_processing_times_dim
     )
     
-    num_actions = num_machines * num_jobs
+    num_actions = num_machines * num_operations
     return operations_data, due_date, num_features, converted_processing_times, max_T, num_actions
 
 def make_operation_data(num_jobs, num_machines, processing_times, machines):
@@ -72,6 +74,7 @@ def read_input_data(input_file_path):
         
         num_jobs, num_machines, *_ = map(int, data_lines[0].split())
 
+        
         processing_times = []
         machines = []
 
@@ -79,8 +82,9 @@ def read_input_data(input_file_path):
             processing_times.append(list(map(int, data_lines[1 + i].split())))
             machines.append(list(map(int, data_lines[1 + num_jobs + i].split())))
         
+        num_operations = len([elem for row in processing_times for elem in row])
         operations_data, due_date, num_features, converted_processing_times, max_T, num_actions \
-        = pre_processing(num_jobs, num_machines, processing_times, machines)
+        = pre_processing(num_jobs, num_machines, num_operations, processing_times, machines)
         instances.append((num_jobs,
                           num_machines,
                           processing_times,

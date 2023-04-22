@@ -13,7 +13,7 @@ def plotting(agent, envs_wrapper, critic_losses, actor_losses, entropies):
     rolling_length = 20
     fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(12, 5))
     fig.suptitle(
-        f"Training plots for {agent.__class__.__name__} in the LunarLander-v2 environment \n \
+        f"Training plots for {agent.__class__.__name__} in the GSSP  environment \n \
                 (n_envs={n_envs}, n_steps_per_update={n_steps_per_update}, randomize_domain={randomize_domain})"
     )
 

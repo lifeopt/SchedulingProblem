@@ -12,7 +12,7 @@ gamma = config['agent']['gamma']
 lam = config['agent']['lam']
 ent_coef = config['agent']['entropy_coef']
 
-    # set the device
+# set the device
 def train(agent, envs_wrapper, device, writer, instance_id):
     critic_losses = []
     actor_losses = []
@@ -46,20 +46,6 @@ def train(agent, envs_wrapper, device, writer, instance_id):
                 actions.cpu().numpy()
             )
             
-            # for env_idx in range(len(terminated)):
-            # #     if terminated[env_idx]:
-            # for env_idx in range(n_envs):
-            #     visualize_job_schedule.draw_gantt_chart_v2(env_idx, states['job_schedule_matrix'][env_idx],
-            #                                                 states['operation_processing_times'][env_idx],
-            #                                                 states['operation_allocation_status'][env_idx],
-            #                                                 states['operation_job_idxs'][env_idx])
-            
-            
-            # # Display job_schedule_matrix at specific intervals
-            # for env_idx in range(len(terminated)):
-            #     if terminated[env_idx]:
-            #         visualize_job_schedule.draw_gantt_chart1(states['job_schedule_matrix'], env_idx)
-            #     # display_gantt_chart?(states['job_schedule_matrix'], step, display_interval)
             ep_value_preds[step] = torch.squeeze(state_value_preds)
             ep_rewards[step] = torch.tensor(rewards, device=device)
             ep_action_log_probs[step] = action_log_probs
@@ -69,6 +55,7 @@ def train(agent, envs_wrapper, device, writer, instance_id):
             masks[step] = torch.tensor([not term for term in terminated])
         
         # calculate the losses for actor and critic
+
         critic_loss, actor_loss = agent.get_losses(
             ep_rewards,
             ep_action_log_probs,
@@ -85,9 +72,6 @@ def train(agent, envs_wrapper, device, writer, instance_id):
         agent.update_parameters(critic_loss, actor_loss)
         
         # log the losses and entropy
-        # critic_losses.append(critic_loss.detach().cpu().numpy())
-        # actor_losses.append(actor_loss.detach().cpu().numpy())
-        # entropies.append(entropy.detach().mean().cpu().numpy())
         critic_loss_value = critic_loss.detach().cpu().numpy()
         actor_loss_value = actor_loss.detach().cpu().numpy()
         entropy_value = entropy.detach().mean().cpu().numpy()

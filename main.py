@@ -28,10 +28,14 @@ is_save_weights = config['model_utils']['save_weights']
 is_load_weights = config['model_utils']['load_weights']
 num_instance_limit = config['train']['num_instance_limit']
 
+actor_weights_path = config['paths']['actor_weights_path']
+critic_weights_path =  config['paths']['critic_weights_path']
+
 def main():  
     
     instances = data_load.read_input_data(input_file_path)
     writer = SummaryWriter(log_dir='runs/GSSP_training')
+            
     for i, instance in enumerate(instances):
         if num_instance_limit <= i:
             continue
@@ -59,6 +63,9 @@ def main():
        
         # init the agent
         agent = A2C(num_features, num_actions, device, critic_lr, actor_lr, n_envs)
+        if is_load_weights:
+            agent = A2C(num_features, num_actions, device, critic_lr, actor_lr, n_envs)
+            save_load_weights.load_weights(agent, critic_weights_path, actor_weights_path)
         
         # create a wrapper environment to save episode returns and episode lengths
         envs_wrapper = gym.wrappers.RecordEpisodeStatistics(envs, deque_size=n_envs * n_updates)
@@ -68,12 +75,8 @@ def main():
                                                                device=device, writer=writer, instance_id=i)
             
         if is_save_weights:
-            save_load_weights.save_weights(agent)
-
-        if is_load_weights:
-            agent = A2C(num_features, num_actions, device, critic_lr, actor_lr)
-            save_load_weights.load_weights(agent)
-        plot_results.plotting(agent, envs_wrapper, critic_losses, actor_losses, entropies)
+            save_load_weights.save_weights(agent, critic_weights_path, actor_weights_path)
+            plot_results.plotting(agent, envs_wrapper, critic_losses, actor_losses, entropies)
         
 
 if __name__ == '__main__':  

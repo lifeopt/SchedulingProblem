@@ -17,6 +17,9 @@ class GSSP(gym.Env):
         self.T = max_T
         self._due_date = due_date
         self.operations_data = operations_data
+        
+        self._cumulative_tardiness = 0
+        self._additional_tardiness = 0
     
         (max_job_idx, max_processing_times) = max(operations_data)[:2]
         # Observations are dictionaries with the timetable (num_machine * max_t) and the job waiting list.
@@ -46,16 +49,20 @@ class GSSP(gym.Env):
     
     def _get_info(self):
         return {
-            "tardiness": 0
+            "addtional tardiness": self._additional_tardiness,
+            "op_schedule_matrix": self._op_schedule_matrix
         }
 
     def reset(self, seed=None, options=None):
         # Initialize the value of unallocated cell as -1 (num machine * num time index with all -1 values)
         self._job_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
+        self._op_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
         # Reset all operations in waiting list to an unassigned status (=false)
         self._operation_allocation_status = np.full(self.K, False, dtype=bool)
         self._operation_processing_times = [data[1] for data in self.operations_data]
         self._operation_job_idxs = [data[0] for data in  self.operations_data]
+        self._cumulative_tardiness = 0
+        self._additional_tardiness = 0
         
         observation = self._get_obs()
         # observation = self._get_flatten_obs()
@@ -73,32 +80,31 @@ class GSSP(gym.Env):
         
         # action
         # The assignment is made at the earliest possible time index that is available for allocation
-        
+        additional_tardiness = 0.0
+        reward = 0.0
         if not self._operation_allocation_status[operation_idx]:
             target_t = self.find_smallest_available_t(machine_idx, job_idx, processing_time)
             if target_t != -1:
+                additional_tardiness = utility.additional_tardiness(self._job_schedule_matrix, machine_idx, target_t, self._due_date, processing_time)
                 self._job_schedule_matrix[machine_idx, target_t:target_t + processing_time] = job_idx
+                self._op_schedule_matrix[machine_idx, target_t:target_t + processing_time] = operation_idx
                 self._operation_allocation_status[operation_idx] = True
             else:
-                for env_idx in range(n_envs):
-                    visualize_job_schedule.draw_gantt_chart_v2(env_idx, self._job_schedule_matrix,
-                                                                self._operation_processing_times,
-                                                                self._operation_allocation_status,
-                                                                self._operation_job_idxs)
                 pass # nothing change
+        else:
+            reward = -0.5 # 같은거 뽑았을 때 minus줘도되나?
             
-        # 그 액션으로 인해 증가한 tardiness만 따로 계산해야함
-        tardiness = utility.calculate_tardiness(self._job_schedule_matrix, self._due_date, self._operation_processing_times)
             
         # An episode is done iff the all operations are allocated
         terminated = np.all(self._operation_allocation_status)
         if terminated:
-            reward = (tardiness) * 2
+            reward = reward + self._cumulative_tardiness + 1
         else:
-            reward = (-tardiness)
-            
+            reward = reward - (additional_tardiness / 1000.0)
+            self._cumulative_tardiness = self._cumulative_tardiness + (additional_tardiness) / 1000   # reward shaping
+    
+        self._additional_tardiness = additional_tardiness
         
-        reward = (-tardiness) if terminated else 0  # Binary sparse rewards
         observation = self._get_obs()
         # observation = self._get_flatten_obs()
         info = self._get_info()
@@ -106,18 +112,10 @@ class GSSP(gym.Env):
         return observation, reward, terminated, False, info
     
     def _get_action_to_assignment(self, action):
-        k = action % self.M
-        m = action // self.M
+        k = action % self.K
+        m = action // self.K
         
         return (k, m)
-    
-    def _is_job_scheduled_at_same_time(self, machine_idx, job_idx, start_time, processing_time):
-        for m in range(self.M):
-            if m != machine_idx:
-                for t in range(start_time, start_time + processing_time):
-                    if self._job_schedule_matrix[m, t] == job_idx:
-                        return True
-        return False
 
     def find_smallest_available_t(self, machine_idx, job_idx, processing_time):
         for t in range(self.T - processing_time + 1):

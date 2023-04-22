@@ -51,22 +51,24 @@ class A2C(nn.Module):
         super().__init__()
         self.device = device
         self.n_envs = n_envs
+        self.n_actions = n_actions
+        self.n_features: n_features
 
         critic_layers = [
-            nn.Linear(n_features, 64),
+            nn.Linear(n_features, 256),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(256, 128),
             nn.ReLU(),
-            nn.Linear(64, 1),  # estimate V(s)
+            nn.Linear(128, 1),  # estimate V(s)
         ]
 
         actor_layers = [
-            nn.Linear(n_features, 64),
+            nn.Linear(n_features, 256),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(
-                64, n_actions
+                128, n_actions
             ),  # estimate action logits (will be fed into a softmax later)
         ]
 
