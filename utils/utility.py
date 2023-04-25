@@ -1,6 +1,6 @@
 import numpy as np
 import numpy as np
-
+ 
 from configuration.config import config
 n_envs = config['envs']['num_envs']
 # n_envs = 1
@@ -23,6 +23,17 @@ def additional_tardiness(job_schedule_matrix, machine_idx, start_time_idx, due_d
     addional_tardiness = max(0, new_tardiness - original_tardiness)
     return addional_tardiness
 
+def calculate_tardiness(job_schedule_matrix, due_dates):
+    n_machines, max_T = job_schedule_matrix.shape
+    sum_tardiness = 0
+    for machine_idx in range(n_machines):
+        completion_time = 0
+        for time_idx in range(len(job_schedule_matrix[machine_idx])):
+            if job_schedule_matrix[machine_idx][time_idx] != -1:
+                completion_time = max(completion_time, time_idx)
+        sum_tardiness += max(0, completion_time - due_dates[machine_idx])
+    return sum_tardiness
+
 if __name__ == '__main__':
     
     job_schedule_matrix = np.array([
@@ -35,6 +46,5 @@ if __name__ == '__main__':
     operation_allocation_status = [True, True, True, True, True, True, True, True, False, True, False]
     operation_job_idxs = [0, 0, 1, 1, 2, 3, 3, 4, 4, 4, 4]
     due_dates = [10, 10, 10]
-    
-    calculate_tardiness(job_schedule_matrix, 1, 7, due_dates, operation_processing_times[0])
+    calculate_tardiness(job_schedule_matrix, due_dates)
                 

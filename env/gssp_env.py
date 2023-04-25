@@ -9,17 +9,19 @@ n_envs = config['envs']['num_envs']
 
 class GSSP(gym.Env):
 
-    def __init__(self, num_jobs, num_machines, operations_data, due_date, max_T):
+    def __init__(self, num_jobs, num_machines, operations_data, due_dates, max_T):
         
         self.N = num_jobs
         self.M = num_machines
         self.K = len(operations_data)
         self.T = max_T
-        self._due_date = due_date
+        self._due_dates = due_dates
         self.operations_data = operations_data
         
+        self._cumulative_reward = 0
         self._cumulative_tardiness = 0
         self._additional_tardiness = 0
+        
     
         (max_job_idx, max_processing_times) = max(operations_data)[:2]
         # Observations are dictionaries with the timetable (num_machine * max_t) and the job waiting list.
@@ -61,6 +63,7 @@ class GSSP(gym.Env):
         self._operation_allocation_status = np.full(self.K, False, dtype=bool)
         self._operation_processing_times = [data[1] for data in self.operations_data]
         self._operation_job_idxs = [data[0] for data in  self.operations_data]
+        self._cumulative_reward = 0
         self._cumulative_tardiness = 0
         self._additional_tardiness = 0
         
@@ -83,25 +86,31 @@ class GSSP(gym.Env):
         additional_tardiness = 0.0
         reward = 0.0
         if not self._operation_allocation_status[operation_idx]:
+            reward = -0.5
             target_t = self.find_smallest_available_t(machine_idx, job_idx, processing_time)
             if target_t != -1:
-                additional_tardiness = utility.additional_tardiness(self._job_schedule_matrix, machine_idx, target_t, self._due_date, processing_time)
+                additional_tardiness = utility.additional_tardiness(self._job_schedule_matrix, machine_idx, target_t, self._due_dates, processing_time)
                 self._job_schedule_matrix[machine_idx, target_t:target_t + processing_time] = job_idx
                 self._op_schedule_matrix[machine_idx, target_t:target_t + processing_time] = operation_idx
                 self._operation_allocation_status[operation_idx] = True
+                reward += (additional_tardiness / 1000.0)
             else:
                 pass # nothing change
         else:
-            reward = -0.5 # 같은거 뽑았을 때 minus줘도되나?
+            reward = 0.5 # 같은거 뽑았을 때 minus줘도되나?
             
             
         # An episode is done iff the all operations are allocated
         terminated = np.all(self._operation_allocation_status)
-        if terminated:
-            reward = reward + self._cumulative_tardiness + 1
-        else:
-            reward = reward - (additional_tardiness / 1000.0)
-            self._cumulative_tardiness = self._cumulative_tardiness + (additional_tardiness) / 1000   # reward shaping
+        # if terminated:
+        #     # additional_reward = 3
+        #     # if self._cumulative_reward < 0:
+        #     #     reward += (-self._cumulative_reward)
+        #     # reward += additional_reward
+        #     pass
+        # else:
+        #     reward -= (additional_tardiness / 1000.0)
+        #     self._cumulative_tardiness = self._cumulative_tardiness + (additional_tardiness) / 1000   # reward shaping
     
         self._additional_tardiness = additional_tardiness
         
@@ -109,6 +118,8 @@ class GSSP(gym.Env):
         # observation = self._get_flatten_obs()
         info = self._get_info()
 
+
+        self._cumulative_reward += reward
         return observation, reward, terminated, False, info
     
     def _get_action_to_assignment(self, action):

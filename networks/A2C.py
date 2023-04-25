@@ -116,11 +116,11 @@ class A2C(nn.Module):
         """
         x = utility.flatten_observations(states) # OrderedDict to np.ndarray
         state_values, action_logits = self.forward(x)
-        action_pd = torch.distributions.Categorical(
+        action_pd = torch.distributions.Categorical(    # this is pi(a|s) (policy)
             logits=action_logits
         )  # implicitly uses softmax
         actions = action_pd.sample()
-        action_log_probs = action_pd.log_prob(actions)
+        action_log_probs = action_pd.log_prob(actions)  # this is log(pi(a|s))
         entropy = action_pd.entropy()
         return (actions, action_log_probs, state_values, entropy)
 

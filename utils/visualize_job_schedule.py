@@ -1,6 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
-def draw_gantt_chart(ax, env_idx, job_schedule_matrix, op_schedule_matrix, operation_job_idxs, colors):
+import threading
+
+def show_figures_on_separate_thread(fig1, fig2):
+    fig1.canvas.manager.window.raise_()
+    fig2.canvas.manager.window.raise_()
+    thread = threading.Thread(target=plt.show)
+    thread.start()
+    
+def draw_gantt_chart(ax, env_idx, job_schedule_matrix, op_schedule_matrix, operation_job_idxs, due_dates, colors):
     max_job_idx = max(operation_job_idxs)
     # num_machines, maxT = job_schedule_matrix.shape[1:]
     num_machines, maxT = job_schedule_matrix.shape
@@ -15,8 +23,9 @@ def draw_gantt_chart(ax, env_idx, job_schedule_matrix, op_schedule_matrix, opera
 
     ax.set_xticks(range(0, maxT + 1, maxT // 10))
     ax.set_xlim(0, maxT)
-
+    due_dates_line_width = 1.7
     legend_elements = [plt.Line2D([0], [0], color=colors[job_idx + 1], lw=4, label=f'Job {job_idx}') for job_idx in range(max_job_idx + 1)]
+    legend_elements.append(plt.Line2D([0], [0], color='red', linestyle='--', linewidth=due_dates_line_width, label='Due Date'))
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., title='Job Color Key')
 
     for machine_idx in range(num_machines):
@@ -34,6 +43,9 @@ def draw_gantt_chart(ax, env_idx, job_schedule_matrix, op_schedule_matrix, opera
                 ax.annotate(f'op{operation_idx}', (start_time + (end_time - start_time) / 2, machine_idx), color='black', weight='bold', fontsize=8, ha='center', va='center')
             else:
                 time_idx += 1
+        # Add red line for due_date for each machine
+        # ax.axvline(due_dates[machine_idx], color='red', linestyle='--', linewidth=1)
+        ax.plot([due_dates[machine_idx], due_dates[machine_idx]], [machine_idx - rect_height / 2, machine_idx + rect_height / 2], color='red', linestyle='--', linewidth=due_dates_line_width)
     plt.tight_layout()
 
 def draw_unallocated_operations_new(ax, env_idx, operation_processing_times, operation_allocation_status, operation_job_idxs, colors):
@@ -77,22 +89,40 @@ def draw_unallocated_operations_new(ax, env_idx, operation_processing_times, ope
     ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.05, 1), borderaxespad=0., title='Job Color Key')
     plt.tight_layout()
        
-def draw_gantt_chart_v2(env_idx, job_schedule_matrix, op_schedule_matrix, processing_times, operation_allocation_status, operation_job_idxs):
+def draw_gantt_chart_v2(env_idx, job_schedule_matrix, op_schedule_matrix, processing_times, operation_allocation_status, operation_job_idxs, due_dates):
     # num_envs, num_machines, maxT = job_schedule_matrix.shape
     max_job_idx = max(operation_job_idxs)
     colors = plt.cm.tab20b(np.linspace(0, 1, max_job_idx + 2))
 
     # for env_idx in range(num_envs):
-    fig, ax = plt.subplots()
-    draw_gantt_chart(ax, env_idx, job_schedule_matrix, op_schedule_matrix, operation_job_idxs, colors)
+    fig1, ax = plt.subplots()
+    draw_gantt_chart(ax, env_idx, job_schedule_matrix, op_schedule_matrix, operation_job_idxs, due_dates, colors)
+    # plt.show(block=False)
 
     fig2, ax2 = plt.subplots()
     draw_unallocated_operations_new(ax2, env_idx, processing_times, operation_allocation_status, operation_job_idxs, colors)
-    # draw_unallocated_operations(ax2, env_idx, processing_times, operation_allocation_status, operation_job_idxs, colors)
-
-    plt.show(block=False)
-)
+    # plt.show(block=False)
     
+    
+    show_figures_on_separate_thread(fig1, fig2)
+    
+def draw_figures(env_idx, job_schedule_matrix, op_schedule_matrix, processing_times, operation_allocation_status, operation_job_idxs, due_dates):
+    # num_envs, num_machines, maxT = job_schedule_matrix.shape
+    max_job_idx = max(operation_job_idxs)
+    colors = plt.cm.tab20b(np.linspace(0, 1, max_job_idx + 2))
+    
+    fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(10, 10), sharex=True)
+
+    # for env_idx in range(num_envs):
+    # fig1, ax = plt.subplots()
+    draw_gantt_chart(ax1, env_idx, job_schedule_matrix, op_schedule_matrix, operation_job_idxs, due_dates, colors)
+    # plt.show(block=False)
+
+    # fig2, ax2 = plt.subplots()
+    draw_unallocated_operations_new(ax2, env_idx, processing_times, operation_allocation_status, operation_job_idxs, colors)
+    plt.tight_layout()
+    plt.show(block=False)
+    # show_figures_on_separate_thread(fig1, fig2)
 
 if __name__ == '__main__':
     num_envs = 1
@@ -122,4 +152,6 @@ if __name__ == '__main__':
                 completion_times[i, j] = time
             else:
                 completion_times[i, j] = -1
-    draw_gantt_chart_v2(0, job_schedule_matrix, operation_processing_times, operation_allocation_status, operation_job_idxs)
+    # draw_gantt_chart_v2(0, job_schedule_matrix, operation_processing_times, operation_allocation_status, operation_job_idxs)
+    # draw_figures(0, job_schedule_matrix, operation_processing_times, operation_allocation_status, operation_job_idxs)
+            # env_idx, job_schedule_matrix, op_schedule_matrix, processing_times, operation_allocation_status, operation_job_idxs

@@ -13,7 +13,7 @@ lam = config['agent']['lam']
 ent_coef = config['agent']['entropy_coef']
 
 # set the device
-def train(agent, envs_wrapper, device, writer, instance_id):
+def train(agent, envs_wrapper, device, writer, due_dates,instance_id):
     critic_losses = []
     actor_losses = []
     entropies = []

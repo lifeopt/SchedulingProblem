@@ -40,19 +40,19 @@ def main():
         if num_instance_limit <= i:
             continue
         (num_jobs, num_machines, processing_times, machines, operations_data,
-         due_date, num_features, converted_processing_times, max_T, num_actions) = instance
+         due_dates, num_features, converted_processing_times, max_T, num_actions) = instance
         
         if randomize_domain:
             envs = gym.vector.AsyncVectorEnv(
                 [
                     lambda: gym.make('GSSP-v0', num_jobs = num_jobs, num_machines =  num_machines,
-                        operations_data = operations_data, due_date = due_date, max_T = max_T, max_episode_steps=600)
+                        operations_data = operations_data, due_dates = due_dates, max_T = max_T, max_episode_steps=600)
                     for i in range(n_envs)
                 ]
             )
         else:
             envs = gym.vector.make('GSSP-v0', num_jobs = num_jobs, num_machines =  num_machines,
-                operations_data = operations_data, due_date = due_date, max_T = max_T, num_envs = n_envs, max_episode_steps=600)
+                operations_data = operations_data, due_dates = due_dates, max_T = max_T, num_envs = n_envs, max_episode_steps=600)
             
         
         # set the device
@@ -72,7 +72,7 @@ def main():
 
         # training the agent
         (critic_losses, actor_losses, entropies) = train.train(agent=agent, envs_wrapper=envs_wrapper,
-                                                               device=device, writer=writer, instance_id=i)
+                                                               device=device, writer=writer, due_dates=due_dates, instance_id=i)
             
         if is_save_weights:
             save_load_weights.save_weights(agent, critic_weights_path, actor_weights_path)
