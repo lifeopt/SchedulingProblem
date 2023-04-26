@@ -73,7 +73,6 @@ def main():
         # training the agent
         (critic_losses, actor_losses, entropies) = train.train(agent=agent, envs_wrapper=envs_wrapper,
                                                                device=device, writer=writer, due_dates=due_dates, instance_id=i)
-            
         if is_save_weights:
             save_load_weights.save_weights(agent, critic_weights_path, actor_weights_path)
             plot_results.plotting(agent, envs_wrapper, critic_losses, actor_losses, entropies)

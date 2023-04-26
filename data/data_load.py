@@ -77,10 +77,11 @@ def read_input_data(input_file_path):
         
         processing_times = []
         machines = []
-
         for i in range(num_jobs):
-            processing_times.append(list(map(int, data_lines[1 + i].split())))
+            processing_time = data_lines[1 + i].split()
+            processing_times.append(list(map(int, processing_time)))
             machines.append(list(map(int, data_lines[1 + num_jobs + i].split())))
+        
         
         num_operations = len([elem for row in processing_times for elem in row])
         operations_data, due_date, num_features, converted_processing_times, max_T, num_actions \

@@ -4,6 +4,26 @@ import numpy as np
 from configuration.config import config
 n_envs = config['envs']['num_envs']
 # n_envs = 1
+
+def normalize_job_schedule_matrix(matrix, max_job_idx):
+    normalized_matrix = (matrix + 1) / (max_job_idx + 1)
+    return normalized_matrix
+
+def normalize_operation_processing_times(operation_processing_times, max_processing_time):
+    normalized_processing_times = np.array(operation_processing_times) / max_processing_time
+    return normalized_processing_times
+
+def normalize_operations_data(operations_data, max_processing_time, max_job_idx, max_machine_idx):
+    normalized_data = []
+    for jobidx, processing_time, machine in operations_data:
+        # 각 속성을 최대값으로 나누어 정규화합니다
+        normalized_jobidx = jobidx / max_job_idx
+        normalized_processing_times = processing_time / max_processing_time
+        normalized_machine_index = machine / max_machine_idx
+        # 정규화된 값을 튜플로 묶어서 normalized_data 리스트에 추가합니다
+        normalized_data.append((normalized_jobidx, normalized_processing_times, normalized_machine_index))
+    return normalized_data
+
 def flatten_observations(states):
     flattened_states = np.concatenate((states['job_schedule_matrix'].reshape(n_envs,-1),
                              states['operation_allocation_status'], 
@@ -33,6 +53,9 @@ def calculate_tardiness(job_schedule_matrix, due_dates):
                 completion_time = max(completion_time, time_idx)
         sum_tardiness += max(0, completion_time - due_dates[machine_idx])
     return sum_tardiness
+
+
+
 
 if __name__ == '__main__':
     

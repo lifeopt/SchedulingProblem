@@ -3,8 +3,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch import optim
-from tqdm import tqdm
-import gymnasium as gym
 from collections import OrderedDict
 import torch.autograd as autograd
 autograd.set_detect_anomaly(True)
@@ -55,21 +53,23 @@ class A2C(nn.Module):
         self.n_features: n_features
 
         critic_layers = [
-            nn.Linear(n_features, 256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(128, 1),  # estimate V(s)
+            nn.Linear(n_features, 1024),
+            nn.LeakyReLU(negative_slope=0.05),
+            nn.Linear(1024, 512),
+            nn.LeakyReLU(negative_slope=0.05),
+            nn.Linear(512, 256),  
+            nn.LeakyReLU(negative_slope=0.05),
+            nn.Linear(128, 1), # estimate V(s)
         ]
 
         actor_layers = [
-            nn.Linear(n_features, 256),
-            nn.ReLU(),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Linear(
-                128, n_actions
-            ),  # estimate action logits (will be fed into a softmax later)
+            nn.Linear(n_features, 1024),
+            nn.LeakyReLU(negative_slope=0.05),
+            nn.Linear(1024, 512),
+            nn.LeakyReLU(negative_slope=0.05),
+            nn.Linear(512, 256),  
+            nn.LeakyReLU(negative_slope=0.05),
+            nn.Linear(128, n_actions), # estimate action logits (will be fed into a softmax later)
         ]
 
         # define actor and critic networks
