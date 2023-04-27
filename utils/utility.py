@@ -5,13 +5,13 @@ from configuration.config import config
 n_envs = config['envs']['num_envs']
 # n_envs = 1
 
-def normalize_job_schedule_matrix(matrix, max_job_idx):
-    normalized_matrix = (matrix + 1) / (max_job_idx + 1)
-    return normalized_matrix
-
-def normalize_operation_processing_times(operation_processing_times, max_processing_time):
-    normalized_processing_times = np.array(operation_processing_times) / max_processing_time
-    return normalized_processing_times
+def calculate_average_tardienss(avg_tardiness, total_terminated_epi, new_tardiness):
+    
+    for i in range(n_envs):
+        if new_tardiness[i] > 0:
+            total_terminated_epi += 1
+            avg_tardiness = (avg_tardiness * total_terminated_epi + new_tardiness) / total_terminated_epi
+    return avg_tardiness, total_terminated_epi
 
 def normalize_operations_data(operations_data, max_processing_time, max_job_idx, max_machine_idx):
     normalized_data = []
