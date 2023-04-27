@@ -2,6 +2,7 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 import utils.utility as utility
+from utils import visualize_job_schedule
 from configuration.config import config
 import train.train as train
 n_envs = config['envs']['num_envs']
@@ -28,13 +29,15 @@ class GSSP(gym.Env):
             max_job_idx = max_job_idx,
             max_machine_idx = max_machine_idx
         )
-        
         self._operation_processing_times = [data[1] for data in self.operations_data]
         self._operation_job_idxs = [data[0] for data in  self.operations_data]
         
         self._norm_operation_processing_times = [data[1] for data in self._norm_operations_data]
         self._norm_operation_job_idxs = [data[0] for data in  self._norm_operations_data]
 
+        self.total_allocated_ops = 0
+        self._op_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
+        self._op_alloc_order_matrix = np.full(self.K, -1, dtype=int)
         
         self._cumulative_reward = 0.0
         self._cumulative_tardiness = 0.0
@@ -45,12 +48,9 @@ class GSSP(gym.Env):
             {
                 # we are creating an observation space with self.num_machines*self.max_t variables,
                 # each taking on self.num_jobs different values (job idxs).
-                # "job_schedule_matrix": spaces.Box(low=-1, high=self.N, shape=(self.M, self.T,), dtype=int),
                 "job_schedule_matrix": spaces.Box(low=-1, high=1, shape=(self.M, self.T,), dtype=float),
                 "operation_allocation_status": spaces.MultiBinary(self.K),
-                # "operation_job_idxs": spaces.Box(low=0, high=max_job_idx, shape=(self.K,), dtype=int),
                 "operation_job_idxs": spaces.Box(low=0, high=1, shape=(self.K,), dtype=float),
-                # "operation_processing_times": spaces.Box(low=0, high=max_processing_times, shape=(self.K,), dtype=int)
                 "operation_processing_times": spaces.Box(low=0, high=1, shape=(self.K,), dtype=float)
             }
         )
@@ -81,11 +81,12 @@ class GSSP(gym.Env):
     def reset(self, seed=None, options=None):
         # Initialize the value of unallocated cell as -1 (num machine * num time index with all -1 values)
         self._job_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
-        self._op_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
         self._norm_job_schedule_matrix = np.full((self.M, self.T), -1, dtype=float)            
         
         # Reset all operations in waiting list to an unassigned status (=false)
+        self._op_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
         self._operation_allocation_status = np.full(self.K, False, dtype=bool)
+        self._op_alloc_order_matrix = np.full(self.K, -1, dtype=int)
         self._cumulative_reward = 0.0
         self._cumulative_tardiness = 0.0
         
@@ -111,12 +112,13 @@ class GSSP(gym.Env):
             reward += 0.001 # reward shaping
             target_t = self.find_smallest_available_t(machine_idx, job_idx, processing_time)
             if target_t != -1:
-                # additional_tardiness = utility.additional_tardiness(self._job_schedule_matrix, machine_idx, target_t, self._due_dates, processing_time)
                 self._job_schedule_matrix[machine_idx, target_t:target_t + processing_time] = job_idx
                 self._operation_allocation_status[operation_idx] = True
                 self._op_schedule_matrix[machine_idx, target_t:target_t + processing_time] = operation_idx
+                self.total_allocated_ops += 1
+                self._op_alloc_order_matrix[operation_idx] = self.total_allocated_ops
+                
                 self._norm_job_schedule_matrix[machine_idx, target_t:target_t + processing_time] = norm_job_idx
-                # reward += (additional_tardiness / 1000.0)
             else:
                 pass # nothing change
         else:
