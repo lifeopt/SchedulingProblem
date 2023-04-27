@@ -1,9 +1,10 @@
 from tqdm import tqdm
 import torch
 from configuration.config import config
-import gymnasium as gym
 # from utils.visualize_job_schedule import display_gantt_chart
 from utils import visualize_job_schedule
+from utils import utility
+import numpy as np
 
 n_envs = config['envs']['num_envs']
 n_updates = config['envs']['num_updates']
@@ -12,11 +13,16 @@ gamma = config['agent']['gamma']
 lam = config['agent']['lam']
 ent_coef = config['agent']['entropy_coef']
 
-# set the device
+global_n_completes_eps = 0
+
+episode_lengths = np.zeros(n_envs)
+
 def train(agent, envs_wrapper, device, writer, due_dates,instance_id):
     critic_losses = []
     actor_losses = []
     entropies = []
+    epi_count = 0
+    avg_tardiness = 0.0
     
     # use tqdm to get a progress bar for training
     for sample_phase in tqdm(range(n_updates)):
@@ -45,6 +51,8 @@ def train(agent, envs_wrapper, device, writer, due_dates,instance_id):
             states, rewards, terminated, truncated, infos = envs_wrapper.step(
                 actions.cpu().numpy()
             )
+            
+            avg_tardiness, epi_count = utility.calculate_average_tardienss(avg_tardiness, epi_count, infos['tardiness'])
             
             ep_value_preds[step] = torch.squeeze(state_value_preds)
             ep_rewards[step] = torch.tensor(rewards, device=device)
