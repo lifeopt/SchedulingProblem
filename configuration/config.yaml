@@ -1,8 +1,8 @@
 envs:
-    num_envs: 1
+    num_envs: 5
     use_cuda: False
-    num_updates: 5000
-    num_steps_per_update: 3
+    num_updates: 100
+    num_steps_per_update: 128
     randomize_domain: False
 
 train:
@@ -10,17 +10,18 @@ train:
 
 agent:
     name: A2C
-    actor_lr: 0.001
-    critic_lr: 0.005
+    actor_lr: 0.0001
+    critic_lr: 0.0005
     lam: 1  # hyperparameter for GAE
-    gamma: 0.999
-    entropy_coef: 0.01  # coefficient for the entropy bonus (to encourage exploration)
+    gamma: 1
+    entropy_coef: 0.05  # coefficient for the entropy bonus (to encourage exploration)
     
 model_utils:
     save_weights: True
     load_weights: False 
 
 paths:
-    input_file_path: 'C:/Users/JS/Desktop/코드/01_ORScheduler/SchedulingProblem/data/taillard/open_shop_scheduling/tai4_4.txt'
+    # input_file_path: 'C:/Users/JS/Desktop/코드/01_ORScheduler/SchedulingProblem/data/taillard/open_shop_scheduling/tai4_4.txt'
+    input_file_path: 'C:/Users/jsp2288.park/Desktop/RLStudy/SchedulingProblem/data/taillard/open_shop_scheduling/tai4_4.txt'
     actor_weights_path: weights/actor.pth
     critic_weights_path: weights/critic.pth
