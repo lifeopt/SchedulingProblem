@@ -59,7 +59,7 @@ class A2C(nn.Module):
             nn.LeakyReLU(negative_slope=0.05),
             nn.Linear(512, 256),  
             nn.LeakyReLU(negative_slope=0.05),
-            nn.Linear(128, 1), # estimate V(s)
+            nn.Linear(256, 1), # estimate V(s)
         ]
 
         actor_layers = [
@@ -69,7 +69,7 @@ class A2C(nn.Module):
             nn.LeakyReLU(negative_slope=0.05),
             nn.Linear(512, 256),  
             nn.LeakyReLU(negative_slope=0.05),
-            nn.Linear(128, n_actions), # estimate action logits (will be fed into a softmax later)
+            nn.Linear(256, n_actions), # estimate action logits (will be fed into a softmax later)
         ]
 
         # define actor and critic networks
