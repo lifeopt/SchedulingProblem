@@ -3,7 +3,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import utils.utility as utility
 from configuration.config import config
-
+import train.train as train
 n_envs = config['envs']['num_envs']
 
 class GSSP(gym.Env):
@@ -16,7 +16,12 @@ class GSSP(gym.Env):
         self.T = max_T
         self._due_dates = due_dates
         self.operations_data = operations_data
-        (max_job_idx, max_processing_time, max_machine_idx) = max(operations_data)
+        
+        
+        max_job_idx = max(operations_data, key=lambda x: x[0])[0]
+        max_processing_time = max(operations_data, key=lambda x: x[1])[1]
+        max_machine_idx = max(operations_data, key=lambda x: x[2])[2]
+        
         self._norm_operations_data = utility.normalize_operations_data(
             operations_data=operations_data,
             max_processing_time = max_processing_time,
@@ -31,10 +36,10 @@ class GSSP(gym.Env):
         self._norm_operation_job_idxs = [data[0] for data in  self._norm_operations_data]
 
         
-        self._cumulative_reward = 0
-        self._cumulative_tardiness = 0
-        self._additional_tardiness = 0
-
+        self._cumulative_reward = 0.0
+        self._cumulative_tardiness = 0.0
+        self._max_possible_tardiness = sum(data[1] for data in operations_data) - min(due_dates)
+        
         # Observations are dictionaries with the timetable (num_machine * max_t) and the job waiting list.
         self.observation_space = spaces.Dict(
             {
@@ -55,7 +60,7 @@ class GSSP(gym.Env):
         # operation idx is assigned to the machine corresponding to machine idx.
         self.action_space = spaces.Discrete(self.K * self.M)
         
-    def _get_obs(self):
+    def _get_obs(self): # normalized values 
         return {
             "job_schedule_matrix": self._norm_job_schedule_matrix.ravel(), # 2D (num_machines * num_time_indexs) array containing job index
             "operation_allocation_status": self._operation_allocation_status, # 1D(num_operations) array having allocation status
@@ -63,23 +68,26 @@ class GSSP(gym.Env):
             "operation_processing_times": self._norm_operation_processing_times,
         }
     
-    def _get_info(self):
+    def _get_info(self):    # unnormalized values 
         return {
-            "addtional tardiness": self._additional_tardiness,
-            "op_schedule_matrix": self._op_schedule_matrix
+            "job_schedule_matrix": self._job_schedule_matrix, # 2D (num_machines * num_time_indexs) array containing job index
+            "operation_allocation_status": self._operation_allocation_status, # 1D(num_operations) array having allocation status
+            "operation_job_idxs": self._operation_job_idxs,
+            "operation_processing_times": self._operation_processing_times,
+            "tardiness": self._cumulative_tardiness,
+            "op_schedule_matrix": self._op_schedule_matrix,
         }
 
     def reset(self, seed=None, options=None):
         # Initialize the value of unallocated cell as -1 (num machine * num time index with all -1 values)
         self._job_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
         self._op_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
-        self._norm_job_schedule_matrix = np.full((self.M, self.T), -1, dtype=int)            
+        self._norm_job_schedule_matrix = np.full((self.M, self.T), -1, dtype=float)            
         
         # Reset all operations in waiting list to an unassigned status (=false)
         self._operation_allocation_status = np.full(self.K, False, dtype=bool)
-        self._cumulative_reward = 0
-        self._cumulative_tardiness = 0
-        self._additional_tardiness = 0
+        self._cumulative_reward = 0.0
+        self._cumulative_tardiness = 0.0
         
         observation = self._get_obs()
         info = self._get_info()
@@ -100,7 +108,7 @@ class GSSP(gym.Env):
         additional_tardiness = 0.0
         reward = 0.0
         if not self._operation_allocation_status[operation_idx]:
-            reward += 0.1 # reward shaping
+            reward += 0.001 # reward shaping
             target_t = self.find_smallest_available_t(machine_idx, job_idx, processing_time)
             if target_t != -1:
                 # additional_tardiness = utility.additional_tardiness(self._job_schedule_matrix, machine_idx, target_t, self._due_dates, processing_time)
@@ -112,23 +120,15 @@ class GSSP(gym.Env):
             else:
                 pass # nothing change
         else:
-            reward -= 0.1 # reward shaping
+            reward -= 0.001 # reward shaping
             
             
         # An episode is done iff the all operations are allocated
         terminated = np.all(self._operation_allocation_status)
         if terminated:
-            reward -= utility.calculate_tardiness(self._job_schedule_matrix, self._due_dates) / 1000
+            reward += (self._max_possible_tardiness - utility.calculate_tardiness(self._job_schedule_matrix, self._due_dates)) / 1000
             self._cumulative_tardiness += utility.calculate_tardiness(self._job_schedule_matrix, self._due_dates) / 1000
-        #     # additional_reward = 3
-        #     # if self._cumulative_reward < 0:
-        #     #     reward += (-self._cumulative_reward)
-        #     # reward += additional_reward
-        #     pass
-        # else:
-        #     reward -= (additional_tardiness / 1000.0)
-    
-        # self._additional_tardiness = additional_tardiness
+
         observation = self._get_obs()
         info = self._get_info()
         self._cumulative_reward += reward
