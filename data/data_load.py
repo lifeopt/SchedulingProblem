@@ -1,4 +1,5 @@
-# input_file_path = r'C:\Users\JS\Desktop\코드\01_ORScheduler\MYJSSP\data\taillard\open_shop_scheduling\tai4_4.txt'
+# input_file_path = r'C:/Users/JS/Desktop/코드/01_ORScheduler/MYJSSP/data/taillard/open_shop_scheduling/tai4_4.txt'
+
 
 from math import ceil
 from configuration.config import config
@@ -111,4 +112,4 @@ if __name__ == '__main__':
         print("Machine order:")
         for row in machines:
             print(row)
-        print("\n")    
+        print("/n")    
