@@ -99,7 +99,6 @@ class GSSP(gym.Env):
         # which machine to assign the operation to. 
         
         (operation_idx, machine_idx) = self._get_action_to_assignment(action)
-        
         job_idx = self._operation_job_idxs[operation_idx]
         norm_job_idx = self._norm_operation_job_idxs[operation_idx]
         processing_time = self._operation_processing_times[operation_idx]
@@ -123,7 +122,6 @@ class GSSP(gym.Env):
                 pass # nothing change
         else:
             reward -= 0.001 # reward shaping
-            
             
         # An episode is done iff the all operations are allocated
         terminated = np.all(self._operation_allocation_status)
