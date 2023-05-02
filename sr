@@ -1,189 +1,125 @@
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-//#include <stdio.h>
-#include <iostream>
-#include <set>
-#include <unordered_map>
-#include <algorithm>
-#include <unordered_map>
-
-
+#include<iostream>
+#include<unordered_map>
+#include<set>
+#include<string>
 using namespace std;
 
-extern void init(int C, int N, int mX[], int mY[]);
-extern int add(int mStudent, int mX, int mY);
-extern int remove(int mStudent);
-extern int status(int mSchool);
-
-/////////////////////////////////////////////////////////////////////////
-
-#define CMD_INIT 1
-#define CMD_ADD 2
-#define CMD_REMOVE 3
-#define CMD_STATUS 4
-#define max_school 10
-#define max_users_per_school 1000
-int n_schools, users_per_school = 0;
-#define max_N 10
-#define max_Students 10*1000
-
-// school입장에서는  10000개, student입장에서는 
-struct Node {
-	int idx;
-	int id;
-	int dist;
-};
-
-Node nodes_students[10 * 1000];	// student가 가지고 있는 node정보
-int max_nodes_students = 0;
-Node nodes_school[10 * 1000]; // school이 가지고 있는 node정보
-int max_nodes_school = 0;
-
-struct Compare_School {
-	bool operator()(Node* a, Node* b) {
-		if (a->dist == b->dist) {
-			return (a->id < b->id);
-		}
-		else
-			return (a->dist < b->dist);
-	}
-};
-
-struct Compare_Student {
-	bool operator()(Node* a, Node* b) {
-		if (a->dist == b->dist) {
-			return (a->id < b->id);
-		}
-		else
-			return (a->dist > b->dist);
-	}
-};
-struct Student {
-	int id;
-	int x, y;
-	set<Node*, Compare_School> school_list; // 1. 거리가까운순 2. 학교ID 낮은 순
-}students[max_Students];
-
-struct School {
-	int id;
-	int x, y;
-	set<Node*, Compare_Student> student_list; // 1. 거리먼순 2. Student ID 낮은 순
-}schools[max_N];
-
-set<Node*, Compare_Student> student_list; // 1. 거리먼순 2. Student ID 낮은 순
-
-//unordered_map<int, School*> schools;
-//unordered_map<int, Student*> students;
-
-int n_students = 0;
-
-void init(int C, int N, int mX[], int mY[]) { 
-	n_schools = N;
-	users_per_school = C;
-	for (int i = 0; i < N; ++i) {
-		schools[i].id = i;
-		schools[i].x = mX[i];
-		schools[i].y = mY[i];
-		schools[i].student_list.clear();
-	}
-}
-
-int get_dist(int x, int y, int x_, int y_)
+struct Result
 {
-	return abs(x_ - x) + abs(y - y_);
-}
+	int mOrder;
+	int mRank;
+};
 
-int add(int mStudent, int mX, int mY) {
-	
-	int student_idx = n_students;
-	students[student_idx].id = mStudent;
-	students[student_idx].x = mX;
-	students[student_idx].y = mY;
-	int max_dist = 0;
-	for (int i = 0; i < n_schools; ++i) {
-		int dist = get_dist(schools[i].x, schools[i].y, students[student_idx].x, students[student_idx].y);
-		max_dist = max(max_dist, dist);
+struct Word {
+	string mStr;	// 검색어
+	int views;	// 조회수
+	int relate_idx;	// 연관검색어 집합의 idx
+}words[15000];
+
+struct comp_words {
+	bool operator()(const int i, const int j) const {
+		if (words[i].mStr == words[j].mStr) {
+			return words[i].views > words[j].views;
+		}
+		return words[i].mStr > words[j].mStr;
 	}
-	int node_idx = n_students;
-	nodes_students[node_idx].idx = student_idx;
-	nodes_students[node_idx].dist = max_dist;
-	nodes_students[node_idx].id = students[student_idx].id;
-	student_list.insert(&nodes_students[node_idx]);
-	n_students += 1;
-	//new_student.dist = max_dist;
-	return 0;
+};
+
+int num_words;
+
+unordered_map<string, int> word_map;	// "단어" - words배열 idx 맵핑
+unordered_map<string, int> relate_map;	// "단어" - 관계배열 idx 매핑
+set<int, comp_words> sorted_idxs;
+
+int veiws_relate[50]; // 연관검색어의 집합들의 조회수
+int num_relates; // 연관검색어의 집합 수
+
+#define LENGTH 8	// 7+1(null character)
+
+void init()
+{
+	num_words = 0;
+	word_map.clear();
+	relate_map.clear();
+	sorted_idxs.clear();
+	num_relates = 0;
+	return;
 }
 
-int remove(int mStudent) {
-	return 0;
+void search(char mStr[], int mCount)
+{
+	string mstr(mStr);
+	auto it = word_map.find(mstr);
+	if (it == word_map.end()) {	// 신규 단어
+		int idx = num_words++;
+		words[idx] = { mstr, mCount, -1};	
+		word_map[mstr] = idx;
+	}
+	else {
+		it->second += mCount;	// 초회수 증가
+	}
 }
 
-int status(int mSchool) {
-	return 0;
-}
+int count_rank(string in_str, string mStr) {	
+	// in_str라는 string이 sorted_idxs에서 ranking 5번째 안에 존재하면 order  return
+	
+
+	string in_str;
+	int word_idx = word_map[mStr];
+	int count = 0;
+	for (int i = 0; mStr[i] != '\0'; i++) {
+		in_str.push_back(mStr[i]);
+		for (auto it: sorted_idxs) {
 
 
+			words[it->].mStr;
 
-static bool run() {
-	int q;
-	scanf("%d", &q);
-
-	int n, mstudent, mschool, mx, my;
-	int mcapa, mxArr[10], myArr[10];
-	int cmd, ans, ret = 0;
-	bool okay = false;
-
-	for (int i = 0; i < q; ++i) {
-		scanf("%d", &cmd);
-		switch (cmd) {
-		case CMD_INIT:
-			scanf("%d %d", &mcapa, &n);
-			for (int j = 0; j < n; ++j) {
-				scanf("%d %d", &mxArr[j], &myArr[j]);
-			}
-			init(mcapa, n, mxArr, myArr);
-			okay = true;
-			break;
-		case CMD_ADD:
-			scanf("%d %d %d %d", &mstudent, &mx, &my, &ans);
-			ret = add(mstudent, mx, my);
-			if (ans != ret)
-				okay = false;
-			break;
-		case CMD_REMOVE:
-			scanf("%d %d", &mstudent, &ans);
-			ret = remove(mstudent);
-			if (ans != ret)
-				okay = false;
-			break;
-		case CMD_STATUS:
-			scanf("%d %d", &mschool, &ans);
-			ret = status(mschool);
-			if (ans != ret)
-				okay = false;
-			break;
-		default:
-			okay = false;
-			break;
 		}
 	}
-	return okay;
 }
 
-int main() {
-	setbuf(stdout, NULL);
-	freopen("sample_input.txt", "r", stdin);
+Result recommend(char mStr[])
+{
+	Result ret = { 0, 0 };
+	int count = 0;
+	for (int i = 0; mStr[i] != '\0'; i++) {
+		auto it1 = word_map.find(string(mStr));
+		int word_idx = it1->second;
+		if (words[word_idx].mStr[i] == mStr[i])
+			count++;
+		else break;
+	//	if (count == )
 
-	int T, MARK;
-	scanf("%d %d", &T, &MARK);
+	//}
 
-	for (int tc = 1; tc <= T; tc++) {
-		int score = run() ? MARK : 0;
-		printf("#%d %d\n", tc, score);
+	return ret;
+}
+
+int relate(char mStr1[], char mStr2[])
+{
+	auto it1 = word_map.find(string(mStr1));
+	auto it2 = word_map.find(string(mStr2));
+	int idx1 = it1->second;
+	int idx2 = it2->second;
+	if (words[idx1].relate_idx != -1 && words[idx2].relate_idx == -1) {
+		words[idx2].relate_idx = words[idx1].relate_idx;
+		
 	}
-
+	else if (words[idx1].relate_idx == -1 && words[idx2].relate_idx != -1) {
+		words[idx1].relate_idx = words[idx2].relate_idx;
+	}
+	else if (words[idx1].relate_idx == -1 && words[idx2].relate_idx == -1) {
+		int relate_idx = num_relates++;
+		words[idx1].relate_idx = relate_idx;
+		words[idx2].relate_idx = relate_idx;
+	}
+	int sum_views = words[idx1].views + words[idx2].views;
+	veiws_relate[words[idx2].relate_idx] = sum_views;
+	words[idx1].views = words[idx2].views = sum_views;
 	return 0;
 }
 
+void rank(char mPrefix[], int mRank, char mReturnStr[])
+{
+	return;
+}
